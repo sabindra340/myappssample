@@ -1,0 +1,174 @@
+. use "$path1/NLSS2011_ChildNut.dta", clear
+. 
+. gen stunted=1 if haz11<=-2 /*HAZ-Height-for-age Zscore-measures long-term child
+>                               nutrition outcome; Below cut-off point of -2 
+>                                                           indicates that the child is stunted*/ 
+(1,416 missing values generated)
+. 
+. replace stunted=0 if haz11>-2
+(1,416 real changes made)
+
+. 
+. summ stunted haz11
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+     stunted |      2,358    .3994911    .4898977          0          1
+       haz11 |      2,356   -1.523345    1.555193      -5.92       5.17
+
+. * Note how the number of observations differ, why is that?
+. 
+. summ stunted if haz11==.
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+     stunted |          2           0           0          0          0
+
+. * It seems that missing values for haz11 were set to zero for stunted. 
+. * But if haz11 is missing, we do not know if stunted or not
+. * In Stata, missing is handled as a very (infinitely) large number
+. * So, the problem is where we wrote replace stunted=0 if haz>-2, we should have
+. * written
+. 
+. drop stunted
+. gen stunted=1 if haz11<=-2 /*HAZ-Height-for-age Zscore-measures long-term child
+>                               nutrition outcomes; Below cut-off point of -2 
+>                               indicates that the child is stunted*/ 
+(1,416 missing values generated)
+
+. replace stunted=0 if haz11>-2 & haz11~=.
+(1,414 real changes made)
+
+. summ haz11 stunted
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+       haz11 |      2,356   -1.523345    1.555193      -5.92       5.17
+     stunted |      2,356    .3998302    .4899673          0          1
+
+
+ 
+. *Alternative syntax for creating dummy variables
+. gen stunt_child=(haz11<=-2)
+. replace stunt_child=. if haz11==.
+(2 real changes made, 2 to missing)
+
+. summ stunt* haz*
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+     stunted |      2,356    .3998302    .4899673          0          1
+ stunt_child |      2,356    .3998302    .4899673          0          1
+       haz11 |      2,356   -1.523345    1.555193      -5.92       5.17
+
+. 
+. gen wast_child=(whz11<=-2)/*WHZ-Weight for height Zscore-measures short-term 
+>                            child nutrition outcomes; Below cut-off pont of -2
+>                            indicates that the child is wasted*/ 
+
+. replace wast_child=. if whz11==.
+(0 real changes made)
+. label var stunt_child "If Child has haz11 <=-2, then 1, otherwise 0"
+. label var wast_child "If Child has whz11 <=-2, then 1, otherwise 0"
+. order(stunt_child wast_child), after(bmi11)
+
+. /*Descriptive statistics*/
+. summ stunted haz11 whz11 
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+     stunted |      2,356    .3998302    .4899673          0          1
+       haz11 |      2,356   -1.523345    1.555193      -5.92       5.17
+       whz11 |      2,358   -.7033291    1.228163      -4.99       4.47
+
+. 
+. /*with weight*/
+. summ stunted haz11 whz11 [w=wt_hh] 
+
+    Variable |     Obs      Weight        Mean   Std. Dev.       Min        Max
+-------------+-----------------------------------------------------------------
+     stunted |   2,356  2432132.43    .4146505   .4927662          0          1
+       haz11 |   2,356  2432132.43   -1.584097   1.551177      -5.92       5.17
+       whz11 |   2,358  2433760.04   -.7576311    1.21569      -4.99       4.47
+
+. 
+. svyset [pweight=wt_hh], psu(xhpsu) strata(xstra)           
+
+      pweight: wt_hh
+          VCE: linearized
+  Single unit: missing
+     Strata 1: xstra
+         SU 1: xhpsu
+        FPC 1: <zero>
+    
+. *We'll cover the svyset command soon   
+. svy: regress stunted 
+(running regress on estimation sample)
+
+Survey: Linear regression
+Number of strata   =        14                  Number of obs     =      2,356
+Number of PSUs     =       481                  Population size   =  2,432,132
+                                                Design df         =        467
+                                                F(   0,    467)   =          .
+                                                Prob > F          =          .
+                                                R-squared         =     0.0000
+------------------------------------------------------------------------------
+             |             Linearized
+     stunted |      Coef.   Std. Err.      t    P>|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+       _cons |   .4146505   .0119541    34.69   0.000     .3911599    .4381411
+------------------------------------------------------------------------------
+.        * Interpret                                                   
+.        * Population who are stunted is 41.5%                                 
+.        * Who is in the population? (children under 5 years of age) 
+.                          * How many children: 2,356 or  2,432,133?                  
+.        * This is important information to note in empirical work     
+.        * Why? Informs/constrains inferences + evidence of data quality
+. 
+. svy: regress stunted poor 
+Survey: Linear regression
+
+Number of strata   =        14                  Number of obs     =      2,356
+Number of PSUs     =       481                  Population size   =  2,432,132
+                                                Design df         =        467
+                                                F(   1,    467)   =      47.83
+                                                Prob > F          =     0.0000
+                                                R-squared         =     0.0252
+------------------------------------------------------------------------------
+             |             Linearized
+     stunted |      Coef.   Std. Err.      t    P>|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+        poor |    .162872   .0235498     6.92   0.000     .1165953    .2091487
+       _cons |   .3558733   .0142258    25.02   0.000     .3279187    .3838278
+------------------------------------------------------------------------------
+.        * poor=1 nonpoor=0, Interpret coefficient on poor             
+.        * What's avg stunting for poor children, for nonpoor children?                                
+.              * Constant defines prevalence of stunting for the nonpoor (35.6%)
+.              * Coefficient on poor tells difference in prevalence from nonpoor
+.                          * stunting for poor is 35.6+16.3 =51.9%
+. 
+.        * Next Regression
+.              /*Different ethnic group*/
+.        * Brahmin Chhetry Mongolian Madhesi Unprivileged
+.              *Unprivileged omitted                                                              
+. 
+.   svy: regress stunted Brahmin Chhetry Mongolian Madhesi 
+Survey: Linear regression
+Number of strata   =        14                  Number of obs     =      2,356
+Number of PSUs     =       481                  Population size   =  2,432,132
+                                                Design df         =        467
+                                                F(   4,    464)   =       3.22
+                                                Prob > F          =     0.0126
+                                                R-squared         =     0.0069
+------------------------------------------------------------------------------
+             |             Linearized
+     stunted |      Coef.   Std. Err.      t    P>|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+     Brahmin |  -.1331653   .0393635    -3.38   0.001    -.2105167   -.0558139
+     Chhetry |  -.0446896   .0335059    -1.33   0.183    -.1105306    .0211513
+   Mongolian |  -.0048239   .0325607    -0.15   0.882    -.0688076    .0591598
+     Madhesi |  -.0376836   .0371649    -1.01   0.311    -.1107147    .0353475
+       _cons |   .4425279   .0199372    22.20   0.000     .4033501    .4817056
+------------------------------------------------------------------------------
+               
+.        * Omitted category is Dalit, Interpret coefficients                                        
+.        * Which ethnicity group has highest prevalence of stunting? Lowest?
+------------------------------------------------------------------------------------------------------------------------------------------------

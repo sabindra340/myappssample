@@ -1,0 +1,636 @@
+
+. ********************************************************************************
+. use "$path1/poverty_edu.dta", clear
+
+. saveold "$path1/poverty_edu.dta", version(12) replace
+. svyset, clear
+. svyset, srs
+      pweight: <none>
+          VCE: linearized
+  Single unit: missing
+     Strata 1: <one>
+         SU 1: <observations>
+        FPC 1: <zero>
+
+. svydes
+Survey: Describing stage 1 sampling units
+
+      pweight: <none>
+          VCE: linearized
+  Single unit: missing
+     Strata 1: <one>
+         SU 1: <observations>
+        FPC 1: <zero>
+
+                                      #Obs per Unit
+                              ----------------------------
+Stratum    #Units     #Obs      min       mean      max   
+--------  --------  --------  --------  --------  --------
+       1     5,988     5,988         1       1.0         1
+--------  --------  --------  --------  --------  --------
+       1     5,988     5,988         1       1.0         1
+
+. svyset, clear
+. gen one=1
+. svyset [w=one]
+      pweight: one
+          VCE: linearized
+  Single unit: missing
+     Strata 1: <one>
+         SU 1: <observations>
+        FPC 1: <zero>
+. svydes
+
+Survey: Describing stage 1 sampling units
+
+      pweight: one
+          VCE: linearized
+  Single unit: missing
+     Strata 1: <one>
+         SU 1: <observations>
+        FPC 1: <zero>
+
+                                      #Obs per Unit
+                              ----------------------------
+Stratum    #Units     #Obs      min       mean      max   
+--------  --------  --------  --------  --------  --------
+       1     5,988     5,988         1       1.0         1
+--------  --------  --------  --------  --------  --------
+       1     5,988     5,988         1       1.0         1
+
+. 
+. 
+.  * 1. UNWEIGHTED & NOT CORRECTED FOR STRATIFICATION AND CLUSTERING;
+.  
+.  describe hh_edu poor hhage
+
+              storage   display    value
+variable name   type    format     label      variable label
+---------------------------------------------------------------------------------------------------------------------
+hh_edu          byte    %21.0g     V07_11     Highest education acquired hy HH head
+poor            byte    %8.0g                 poor household
+hhage           byte    %8.0g                 1.03 age
+
+.  summ hh_edu poor hhage
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+      hh_edu |      5,988     3.97328    4.590746          0         16
+        poor |      5,988    .1852037    .3884952          0          1
+       hhage |      5,988    45.99516    14.13213         11         95
+
+.  
+. * Last class we looked at how weights change the means (or slope
+. * coefficients), now we look at how sample design affects variance
+. * estimates;
+. * Interpret Std. Dev. Is this what we're interested in?
+. * Can we get the standard error of the estimate from this output?
+. 
+.  display "Assuming SRS, SE mean of hh_edu = "  4.590746 / (5988)^0.5
+Assuming SRS, SE mean of hh_edu = .05932563
+
+.  display "Assuming SRS, SE mean of hhage = "  14.13213  / (5988)^0.5
+Assuming SRS, SE mean of hhage = .18262773
+
+. svy: mean hh_edu poor hhage
+Survey: Mean estimation
+Number of strata =       1        Number of obs   =      5,988
+Number of PSUs   =   5,988        Population size =      5,988
+                                  Design df       =      5,987
+--------------------------------------------------------------
+             |             Linearized
+             |       Mean   Std. Err.     [95% Conf. Interval]
+-------------+------------------------------------------------
+      hh_edu |    3.97328   .0593256       3.85698     4.08958
+        poor |   .1852037   .0050205      .1753618    .1950457
+       hhage |   45.99516   .1826278      45.63714    46.35317
+--------------------------------------------------------------
+
+. estat effects, deff
+------------------------------------------------
+             |             Linearized
+             |       Mean   Std. Err.       DEFF
+-------------+----------------------------------
+      hh_edu |    3.97328   .0593256           1
+        poor |   .1852037   .0050205           1
+       hhage |   45.99516   .1826278           1
+------------------------------------------------
+. 
+. *Note DEFF =1. Note means
+. 
+. * 2. CORRECT FOR STRATIFICATION
+.  quietly svyset, clear
+.  rename xstra strata
+.  quietly svyset, strata(strata)
+
+.  svydes
+Survey: Describing stage 1 sampling units
+      pweight: <none>
+          VCE: linearized
+  Single unit: missing
+     Strata 1: strata
+         SU 1: <observations>
+        FPC 1: <zero>
+
+                                      #Obs per Unit
+                              ----------------------------
+Stratum    #Units     #Obs      min       mean      max   
+--------  --------  --------  --------  --------  --------
+     100       408       408         1       1.0         1
+     218       864       864         1       1.0         1
+     219       480       480         1       1.0         1
+     221       384       384         1       1.0         1
+     222       480       480         1       1.0         1
+     223       480       480         1       1.0         1
+     224       336       336         1       1.0         1
+     225       180       180         1       1.0         1
+     310       672       672         1       1.0         1
+     321       480       480         1       1.0         1
+     322       480       480         1       1.0         1
+     323       348       348         1       1.0         1
+     324       240       240         1       1.0         1
+     325       156       156         1       1.0         1
+--------  --------  --------  --------  --------  --------
+      14     5,988     5,988         1       1.0         1
+
+. 
+.  svy: mean hh_edu poor hhage
+Survey: Mean estimation
+Number of strata =      14        Number of obs   =      5,988
+Number of PSUs   =   5,988        Population size =      5,988
+                                  Design df       =      5,974
+
+--------------------------------------------------------------
+             |             Linearized
+             |       Mean   Std. Err.     [95% Conf. Interval]
+-------------+------------------------------------------------
+      hh_edu |    3.97328   .0557623      3.863966    4.082594
+        poor |   .1852037   .0049262      .1755466    .1948609
+       hhage |   45.99516   .1818021      45.63876    46.35155
+--------------------------------------------------------------
+
+.  estat effects, deff
+
+------------------------------------------------
+             |             Linearized
+             |       Mean   Std. Err.       DEFF
+-------------+----------------------------------
+      hh_edu |    3.97328   .0557623      .88348
+        poor |   .1852037   .0049262     .962799
+       hhage |   45.99516   .1818021     .990979
+------------------------------------------------
+
+.  
+. * Note: No change in means, efficiency gain;
+. /*HH_EDU*/
+. 
+.   display "Vss/Vsrs = " round((.0557623)^2/(.0593256)^2,0.00001)
+Vss/Vsrs = .88348
+
+.   display "SEss/SEsrs = " round(.0557623/.0593256,0.00001)
+SEss/SEsrs = .93994
+
+.   display "SQR DEFF= "  round(.88348^0.5, 0.00001)
+SQR DEFF= .93994
+
+.         
+. *What's the efficiency gain from stratification for hh_edu? poor?
+. 
+. 
+. *3. CORRECT FOR STRATIFICATION and CLUSTERING
+.  rename xhpsu psu 
+.  quietly svyset psu, strata(strata)
+.  svydes
+
+Survey: Describing stage 1 sampling units
+
+      pweight: <none>
+          VCE: linearized
+  Single unit: missing
+     Strata 1: strata
+         SU 1: psu
+        FPC 1: <zero>
+
+                                      #Obs per Unit
+                              ----------------------------
+Stratum    #Units     #Obs      min       mean      max   
+--------  --------  --------  --------  --------  --------
+     100        34       408        12      12.0        12
+     218        72       864        12      12.0        12
+     219        40       480        12      12.0        12
+     221        32       384        12      12.0        12
+     222        40       480        12      12.0        12
+     223        40       480        12      12.0        12
+     224        28       336        12      12.0        12
+     225        15       180        12      12.0        12
+     310        56       672        12      12.0        12
+     321        40       480        12      12.0        12
+     322        40       480        12      12.0        12
+     323        29       348        12      12.0        12
+     324        20       240        12      12.0        12
+     325        13       156        12      12.0        12
+--------  --------  --------  --------  --------  --------
+      14       499     5,988        12      12.0        12
+
+.  svy: mean hh_edu poor hhage
+Survey: Mean estimation
+Number of strata =      14        Number of obs   =      5,988
+Number of PSUs   =     499        Population size =      5,988
+                                  Design df       =        485
+--------------------------------------------------------------
+             |             Linearized
+             |       Mean   Std. Err.     [95% Conf. Interval]
+-------------+------------------------------------------------
+      hh_edu |    3.97328   .0785977      3.818846    4.127714
+        poor |   .1852037   .0080702      .1693469    .2010606
+       hhage |   45.99516   .2264206      45.55027    46.44004
+--------------------------------------------------------------
+
+.  estat effects, deff
+------------------------------------------------
+             |             Linearized
+             |       Mean   Std. Err.       DEFF
+-------------+----------------------------------
+      hh_edu |    3.97328   .0785977     1.75523
+        poor |   .1852037   .0080702      2.5839
+       hhage |   45.99516   .2264206     1.53709
+------------------------------------------------
+
+.  
+. * Note: No change in means, efficiency loss
+. * Compare standard errors from parts 1 and 3;
+. /*
+>    Mean  |   SE(1)    SE(3)   Deff  Deff^0.5   SE(3)/SE(1)
+> ---------+------------------------------------------------
+>  hh_edu  |  .0593   .07859    1.755    1.32     1.32
+>     poor |  .0050   .00807    2.584    1.61     1.61
+>    hhage |  .1826   .22642    1.537    1.24     1.24
+> *----------------------------------------------------------
+> */
+. * Can you explain why the Deff differs?
+. * Note this comparison works because Deff=1 for base and unweighted
+. 
+.  *4. CORRECTED FOR WEIGHTING, STRATIFICATION and CLUSTERING
+.  quietly svyset psu [pw=wt_hh], strata(strata)
+
+.  svydes
+Survey: Describing stage 1 sampling units
+      pweight: wt_hh
+          VCE: linearized
+  Single unit: missing
+     Strata 1: strata
+         SU 1: psu
+        FPC 1: <zero>
+                                      #Obs per Unit
+                              ----------------------------
+Stratum    #Units     #Obs      min       mean      max   
+--------  --------  --------  --------  --------  --------
+     100        34       408        12      12.0        12
+     218        72       864        12      12.0        12
+     219        40       480        12      12.0        12
+     221        32       384        12      12.0        12
+     222        40       480        12      12.0        12
+     223        40       480        12      12.0        12
+     224        28       336        12      12.0        12
+     225        15       180        12      12.0        12
+     310        56       672        12      12.0        12
+     321        40       480        12      12.0        12
+     322        40       480        12      12.0        12
+     323        29       348        12      12.0        12
+     324        20       240        12      12.0        12
+     325        13       156        12      12.0        12
+--------  --------  --------  --------  --------  --------
+      14       499     5,988        12      12.0        12
+
+.  
+. *******************************************************************************
+.  svy: mean hh_edu poor hhage
+Survey: Mean estimation
+
+Number of strata =      14        Number of obs   =      5,988
+Number of PSUs   =     499        Population size =  5,776,250
+                                  Design df       =        485
+--------------------------------------------------------------
+             |             Linearized
+             |       Mean   Std. Err.     [95% Conf. Interval]
+-------------+------------------------------------------------
+      hh_edu |   3.509617   .0789021      3.354585    3.664649
+        poor |   .2000372   .0090424      .1822701    .2178044
+       hhage |   46.35536   .2319043       45.8997    46.81102
+--------------------------------------------------------------
+
+.  estat effects, deff
+
+------------------------------------------------
+             |             Linearized
+             |       Mean   Std. Err.       DEFF
+-------------+----------------------------------
+      hh_edu |   3.509617   .0789021      1.9737
+        poor |   .2000372   .0090424     3.05912
+       hhage |   46.35536   .2319043     1.63461
+------------------------------------------------
+
+.  
+.  * Note: using household weights, interpret (20% of what?)
+.  * Means change slightly.
+.  * Mean of poor increases -- Over or under sampling of poor households?
+.  * Mean of hh_edu decreases -- What's the sampling implication?
+.  * Is there anything we learned in the last lecture about over- and
+.  * under-sampling of each stratum that helps explain this? 
+.  
+.  svyset, clear
+.  * Let's take another look at differences between weighted and unweighted 
+.  * sample proportions. 
+. svyset, srs
+      pweight: <none>
+          VCE: linearized
+  Single unit: missing
+     Strata 1: <one>
+         SU 1: <observations>
+        FPC 1: <zero>
+
+. gen urban = 1 if urbrur==1
+. replace urban = 0 if urbrur==2
+. gen upper = (strata==218) /*Here upper is the Kathmandu city*/
+
+. svy: mean upper urban
+Survey: Mean estimation
+Number of strata =       1        Number of obs   =      5,988
+Number of PSUs   =   5,988        Population size =      5,988
+                                  Design df       =      5,987
+--------------------------------------------------------------
+             |             Linearized
+             |       Mean   Std. Err.     [95% Conf. Interval]
+-------------+------------------------------------------------
+       upper |   .1442886   .0045412      .1353861    .1531911
+       urban |   .3486974    .006159      .3366235    .3607713
+--------------------------------------------------------------
+
+. *******************************************************************************
+. quietly svyset, clear
+. quietly svyset psu [pw=wt_ind], strata(strata)
+. svy: mean upper urban
+
+Survey: Mean estimation
+Number of strata =      14       Number of obs   =       5,988
+Number of PSUs   =     499       Population size =  28,023,715
+                                 Design df       =         485
+--------------------------------------------------------------
+             |             Linearized
+             |       Mean   Std. Err.     [95% Conf. Interval]
+-------------+------------------------------------------------
+       upper |   .0570929   .0012469      .0546429    .0595429
+       urban |   .1901747   .0037608      .1827852    .1975641
+--------------------------------------------------------------
+
+.  
+. *Under sampled urban and upper
+. *One last example,let's test for whether poverty is different across urban/rural
+. *First, we'll weight by individuals, but accidentally forget strata and clusters
+. 
+.  quietly svyset, clear
+
+.  svyset [pw=wt_ind]
+
+      pweight: wt_ind
+          VCE: linearized
+  Single unit: missing
+     Strata 1: <one>
+         SU 1: <observations>
+        FPC 1: <zero>
+. svy , subpop(urban): mean poor
+Survey: Mean estimation
+Number of strata =       1       Number of obs   =       5,988
+Number of PSUs   =   5,988       Population size =  28,023,715
+                                 Subpop. no. obs =       2,088
+                                 Subpop. size    = 5,329,400.3
+                                 Design df       =       5,987
+--------------------------------------------------------------
+             |             Linearized
+             |       Mean   Std. Err.     [95% Conf. Interval]
+-------------+------------------------------------------------
+        poor |   .1545721     .01027      .1344391     .174705
+--------------------------------------------------------------
+
+. 
+. svy , subpop(if urban==0): mean poor
+Survey: Mean estimation
+Number of strata =       1       Number of obs   =       5,988
+Number of PSUs   =   5,988       Population size =  28,023,715
+                                 Subpop. no. obs =       3,900
+                                 Subpop. size    =  22,694,315
+                                 Design df       =       5,987
+--------------------------------------------------------------
+             |             Linearized
+             |       Mean   Std. Err.     [95% Conf. Interval]
+-------------+------------------------------------------------
+        poor |   .2743241   .0084455      .2577679    .2908803
+--------------------------------------------------------------
+. 
+. display "(Difference / Stnd. Error) = "(0.27432-.15457)/(.0084^2 + 0.0103^2)^0.5
+(Difference / Stnd. Error) = 9.0098737
+
+. *Now, we'll examine this with corrected standard errors
+. quietly svyset psu [pw=wt_ind], strata(strata)
+. svy , subpop(urban): mean poor
+
+Survey: Mean estimation
+Number of strata =       4        Number of obs   =      2,424
+Number of PSUs   =     202        Population size =  7,218,749
+                                  Subpop. no. obs =      2,088
+                                  Subpop. size    =  5,329,400
+                                  Design df       =        198
+--------------------------------------------------------------
+             |             Linearized
+             |       Mean   Std. Err.     [95% Conf. Interval]
+-------------+------------------------------------------------
+        poor |   .1545721   .0175043      .1200532    .1890909
+--------------------------------------------------------------
+Note: 10 strata omitted because they contain no subpopulation
+      members.
+
+. 
+. svy , subpop(if urban==0): mean poor
+Survey: Mean estimation
+Number of strata =      11       Number of obs   =       3,972
+Number of PSUs   =     331       Population size =  22,779,859
+                                 Subpop. no. obs =       3,900
+                                 Subpop. size    =  22,694,315
+                                 Design df       =         320
+--------------------------------------------------------------
+             |             Linearized
+             |       Mean   Std. Err.     [95% Conf. Interval]
+-------------+------------------------------------------------
+        poor |   .2743241   .0129277      .2488901    .2997581
+--------------------------------------------------------------
+Note: 3 strata omitted because they contain no subpopulation
+      members.
+
+. display "(Difference / Stnd. Error) = "(0.27432-.15457)/(.0129^2 + 0.0175^2)^0.5
+(Difference / Stnd. Error) = 5.5080909
+. *Note no change in means, discuss change in precision
+. *This is a simplified version of a fully corrected test
+. display "P-value of test statistic = "(1-normal(9.009))*2
+P-value of test statistic = 0
+
+.         /*Two tailed distribution*/
+.                                 
+.  ***  "Reject H0 (equality of means) at 99% confidence level"
+.  
+.  display "P-value of test statistic = "(1-normal(5.508))*2
+P-value of test statistic = 3.629e-08
+.  
+.  *** "Fail to Reject H0 at 99% confidence level
+. 
+. *
+. * Let's repeat this last test, but rely more heavily on Stata
+. * In this case, the results will provide a test based on a
+. * test statistic that is correct in the presence of complex design
+. 
+. svy: mean poor, over(urban)
+Survey: Mean estimation
+Number of strata =      14       Number of obs   =       5,988
+Number of PSUs   =     499       Population size =  28,023,715
+                                 Design df       =         485
+            0: urban = 0
+            1: urban = 1
+--------------------------------------------------------------
+             |             Linearized
+        Over |       Mean   Std. Err.     [95% Conf. Interval]
+-------------+------------------------------------------------
+poor         |
+           0 |   .2743241   .0129277      .2489229    .2997252
+           1 |   .1545721   .0175043      .1201784    .1889657
+--------------------------------------------------------------
+. 
+. test [poor]0=[poor]1
+Adjusted Wald test
+ ( 1)  [poor]0 - [poor]1 = 0
+
+       F(  1,   485) =   30.39
+            Prob > F =    0.0000
+. 
+. *How accounting desing effects changes the inferences?
+. *Simple random sampling
+. svyset, srs
+      pweight: <none>
+          VCE: linearized
+  Single unit: missing
+     Strata 1: <one>
+         SU 1: <observations>
+        FPC 1: <zero>
+
+. svy: mean poor, over(strata)
+(running mean on estimation sample)
+
+Survey: Mean estimation
+
+Number of strata =       1        Number of obs   =      5,988
+Number of PSUs   =   5,988        Population size =      5,988
+                                  Design df       =      5,987
+
+    _subpop_1: strata = 100/Mountain
+    _subpop_2: strata = 218/Urban-Kathmandu Valley
+    _subpop_3: strata = 219/Urban-Hill
+    _subpop_4: strata = 221/Rural-Hill-Eastern
+    _subpop_5: strata = 222/Rural-Hill-Central
+    _subpop_6: strata = 223/Rural-Hill-Western
+    _subpop_7: strata = 224/Rural-Hill-Mid-Western
+    _subpop_8: strata = 225/Rural-Hill-Far-Western
+    _subpop_9: strata = 310/Urban-Terai
+   _subpop_10: strata = 321/Rural-Terai-Eastern
+   _subpop_11: strata = 322/Rural-Terai-Central
+   _subpop_12: strata = 323/Rural-Terai-Western
+   _subpop_13: strata = 324/Rural-Terai-Mid-Western
+   _subpop_14: strata = 325/Rural-Terai-Far-Western
+
+--------------------------------------------------------------
+             |             Linearized
+        Over |       Mean   Std. Err.     [95% Conf. Interval]
+-------------+------------------------------------------------
+poor         |
+   _subpop_1 |   .2965686   .0226141      .2522368    .3409004
+   _subpop_2 |   .0983796   .0101331       .078515    .1182442
+   _subpop_3 |     .06875   .0115501      .0461077    .0913923
+   _subpop_4 |   .1197917   .0165721      .0873044    .1522789
+   _subpop_5 |   .2229167   .0189986      .1856726    .2601607
+   _subpop_6 |   .2166667   .0188055      .1798011    .2535322
+   _subpop_7 |   .2797619   .0244906      .2317516    .3277723
+   _subpop_8 |   .3944444   .0364309      .3230267    .4658621
+   _subpop_9 |    .171131   .0145298      .1426474    .1996145
+  _subpop_10 |   .1645833   .0169262      .1314018    .1977648
+  _subpop_11 |   .1958333   .0181147      .1603219    .2313447
+  _subpop_12 |   .1637931   .0198404      .1248987    .2026875
+  _subpop_13 |   .2166667    .026595      .1645309    .2688024
+  _subpop_14 |   .3269231   .0375603      .2532913    .4005548
+--------------------------------------------------------------
+
+. 
+. test [poor]_subpop_6 =[poor]_subpop_10 
+
+Adjusted Wald test
+
+ ( 1)  [poor]_subpop_6 - [poor]_subpop_10 = 0
+
+       F(  1,  5987) =    4.24
+            Prob > F =    0.0396
+
+. 
+. *Accounting complex survey design
+. quietly svyset psu [pw=wt_ind], strata(strata)
+
+. svy: mean poor, over(strata)
+(running mean on estimation sample)
+
+Survey: Mean estimation
+
+Number of strata =      14       Number of obs   =       5,988
+Number of PSUs   =     499       Population size =  28,023,715
+                                 Design df       =         485
+
+    _subpop_1: strata = 100/Mountain
+    _subpop_2: strata = 218/Urban-Kathmandu Valley
+    _subpop_3: strata = 219/Urban-Hill
+    _subpop_4: strata = 221/Rural-Hill-Eastern
+    _subpop_5: strata = 222/Rural-Hill-Central
+    _subpop_6: strata = 223/Rural-Hill-Western
+    _subpop_7: strata = 224/Rural-Hill-Mid-Western
+    _subpop_8: strata = 225/Rural-Hill-Far-Western
+    _subpop_9: strata = 310/Urban-Terai
+   _subpop_10: strata = 321/Rural-Terai-Eastern
+   _subpop_11: strata = 322/Rural-Terai-Central
+   _subpop_12: strata = 323/Rural-Terai-Western
+   _subpop_13: strata = 324/Rural-Terai-Mid-Western
+   _subpop_14: strata = 325/Rural-Terai-Far-Western
+
+--------------------------------------------------------------
+             |             Linearized
+        Over |       Mean   Std. Err.     [95% Conf. Interval]
+-------------+------------------------------------------------
+poor         |
+   _subpop_1 |   .4226816   .0434183      .3373704    .5079928
+   _subpop_2 |   .1146874   .0146564      .0858894    .1434853
+   _subpop_3 |   .0872308   .0218553      .0442881    .1301734
+   _subpop_4 |   .1592745   .0296032      .1011081    .2174409
+   _subpop_5 |   .2936917   .0515753      .1923532    .3950303
+   _subpop_6 |   .2801412   .0364256      .2085698    .3517126
+   _subpop_7 |   .3160843   .0441884      .2292599    .4029086
+   _subpop_8 |   .4755313   .0634066      .3509457    .6001168
+   _subpop_9 |   .2204285   .0347673      .1521153    .2887417
+  _subpop_10 |   .2097205   .0316675      .1474981    .2719429
+  _subpop_11 |   .2312883   .0267637      .1787011    .2838754
+  _subpop_12 |   .2231296   .0505028      .1238983    .3223608
+  _subpop_13 |   .2561437   .0564327      .1452608    .3670265
+  _subpop_14 |   .3840563   .0647128      .2569042    .5112084
+--------------------------------------------------------------
+
+. test [poor]_subpop_6 =[poor]_subpop_10 
+
+Adjusted Wald test
+
+ ( 1)  [poor]_subpop_6 - [poor]_subpop_10 = 0
+
+       F(  1,   485) =    2.13
+            Prob > F =    0.1452
+
+. *Changes the inferences, fail to reject the null hypothesis

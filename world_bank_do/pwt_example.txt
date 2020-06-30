@@ -1,0 +1,408 @@
+. ********************************************************************************
+. use "$path1/poverty.dta", clear
+. describe
+
+Contains data from D:\0-ONEDRIVE\WBG\Ganesh Thapa - stata_file\02_Weights/Data/poverty.dta
+  obs:         5,988                          
+ vars:            21                          19 Jan 2018 01:43
+ size:       329,340                          (_dta has notes)
+------------------------------------------------------------------------------------------------------------------------------------------------
+              storage   display    value
+variable name   type    format     label      variable label
+------------------------------------------------------------------------------------------------------------------------------------------------
+xhpsu           int     %8.0g                 psu
+xhnum           byte    %8.0g                 household number
+wt_hh           float   %9.0g                 household weights
+xstra           int     %27.0g     XSTRA      Strata in the NLSS3' sample
+female_head     byte    %8.0g      female_head
+                                              If household is headed by female, then 1, otherwise 0
+hhage           byte    %8.0g                 1.03 age
+hh_edu          byte    %21.0g     V07_11     Highest education acquired hy HH head
+hhlit           float   %9.0g                 If household is illiterate, then 1, otherwise 0
+hhsize          byte    %8.0g                 household size
+belt            byte    %8.0g      belt       
+region          byte    %8.0g      region     
+urbrur          byte    %8.0g      urbrur     
+ad              byte    %8.0g      analytical_dom
+                                              analytical domains
+wt_ind          float   %9.0g                 individual weights
+fpline_7        float   %9.0g                 pc annual food poverty line, temporally adjusted national prices: 7d
+pline_7         float   %9.0g                 pc annual total poverty line, temporally adjusted national prices: 7d
+pindex          float   %9.0g                 spatial price index to convert temporally adj overall prices to national prices
+poor            byte    %8.0g                 poor household
+totcons_pc_7    double  %10.0g                annual per capita nomial hh consumption, 7d
+food_pc_7       double  %10.0g                annual nominal pc food consumption, 7d
+quintle_7       byte    %8.0g                 nominal quintiles of annual pc consumption, 7d
+------------------------------------------------------------------------------------------------------------------------------------------------
+Sorted by: xhpsu  xhnum
+
+. rename xstra strata                                                  
+. tab strata
+
+Strata in the NLSS3' sample |      Freq.     Percent        Cum.
+----------------------------+-----------------------------------
+               100/Mountain |        408        6.81        6.81
+ 218/Urban-Kathmandu Valley |        864       14.43       21.24
+             219/Urban-Hill |        480        8.02       29.26
+     221/Rural-Hill-Eastern |        384        6.41       35.67
+     222/Rural-Hill-Central |        480        8.02       43.69
+     223/Rural-Hill-Western |        480        8.02       51.70
+ 224/Rural-Hill-Mid-Western |        336        5.61       57.31
+ 225/Rural-Hill-Far-Western |        180        3.01       60.32
+            310/Urban-Terai |        672       11.22       71.54
+    321/Rural-Terai-Eastern |        480        8.02       79.56
+    322/Rural-Terai-Central |        480        8.02       87.58
+    323/Rural-Terai-Western |        348        5.81       93.39
+324/Rural-Terai-Mid-Western |        240        4.01       97.39
+325/Rural-Terai-Far-Western |        156        2.61      100.00
+----------------------------+-----------------------------------
+                      Total |      5,988      100.00
+
+. tab wt_hh
+
+  household |
+    weights |      Freq.     Percent        Cum.
+------------+-----------------------------------
+     280.35 |         24        0.40        0.40
+     292.99 |         24        0.40        0.80
+     293.06 |         24        0.40        1.20
+     436.73 |        288        4.81        6.01
+     456.42 |        288        4.81       10.82
+     456.52 |        288        4.81       15.63
+     594.67 |        156        2.61       18.24
+     621.49 |        180        3.01       21.24
+     621.63 |        144        2.40       23.65
+     678.58 |        156        2.61       26.25
+     709.19 |        264        4.41       30.66
+     709.34 |        204        3.41       34.07
+     908.08 |        120        2.00       36.07
+     909.65 |         60        1.00       37.07
+     921.88 |         84        1.40       38.48
+     938.49 |        108        1.80       40.28
+     948.05 |         84        1.40       41.68
+     949.03 |        120        2.00       43.69
+     949.24 |        108        1.80       45.49
+     950.68 |         60        1.00       46.49
+     950.89 |         60        1.00       47.49
+     963.45 |         72        1.20       48.70
+     963.67 |         84        1.40       50.10
+     980.82 |        120        2.00       52.10
+     980.94 |         60        1.00       53.11
+     981.03 |        156        2.61       55.71
+     990.81 |        108        1.80       57.52
+     991.03 |        144        2.40       59.92
+    1025.18 |         24        0.40       60.32
+    1025.41 |         72        1.20       61.52
+    1095.83 |         84        1.40       62.93
+    1134.34 |        168        2.81       65.73
+    1145.25 |        120        2.00       67.74
+     1145.5 |        132        2.20       69.94
+     1185.5 |        180        3.01       72.95
+    1185.76 |        132        2.20       75.15
+    1261.67 |        156        2.61       77.76
+    1318.57 |        168        2.81       80.56
+    1318.87 |        156        2.61       83.17
+    1345.57 |        180        3.01       86.17
+    1357.16 |         48        0.80       86.97
+    1406.25 |        156        2.61       89.58
+    1406.56 |        144        2.40       91.98
+    1539.33 |        180        3.01       94.99
+    1608.76 |        156        2.61       97.60
+    1609.11 |        144        2.40      100.00
+------------+-----------------------------------
+      Total |      5,988      100.00
+
+. 
+. * interpret one of the weights, what does a weight of 1609 mean?
+. * Explain why there are unique values
+. * All HH within each stratum selected with equal probability
+. * Within each stratum, further adjustments for trimester and urb/rur
+. 
+. tab wt_hh strata if wt_hh<900 /* just looking at one screen of data*/
+
+ household |         Strata in the NLSS3' sample
+   weights | 100/Mount  218/Urban  219/Urban  310/Urban |     Total
+-----------+--------------------------------------------+----------
+    280.35 |        24          0          0          0 |        24 
+    292.99 |        24          0          0          0 |        24 
+    293.06 |        24          0          0          0 |        24 
+    436.73 |         0        288          0          0 |       288 
+    456.42 |         0        288          0          0 |       288 
+    456.52 |         0        288          0          0 |       288 
+    594.67 |         0          0        156          0 |       156 
+    621.49 |         0          0        180          0 |       180 
+    621.63 |         0          0        144          0 |       144 
+    678.58 |         0          0          0        156 |       156 
+    709.19 |         0          0          0        264 |       264 
+    709.34 |         0          0          0        204 |       204 
+-----------+--------------------------------------------+----------
+     Total |        72        864        480        624 |     2,040 
+
+
+. * Note 3 different weights (mostly) for each stratum
+. egen hid=group(xhpsu xhnum)  /*Creates unique household id*/
+. sort hid
+. order hid,before(xhpsu)
+. l hid xhpsu strata poor  hhsize wt* in 1/10 /*list first 10 observations*/
+
+     +----------------------------------------------------------------+
+     | hid   xhpsu         strata   poor   hhsize    wt_hh     wt_ind |
+     |----------------------------------------------------------------|
+  1. |   1    1001   100/Mountain      0        3   293.06   879.1722 |
+  2. |   2    1001   100/Mountain      0        5   293.06   1465.287 |
+  3. |   3    1001   100/Mountain      0        2   293.06   586.1149 |
+  4. |   4    1001   100/Mountain      0        2   293.06   586.1149 |
+  5. |   5    1001   100/Mountain      0        5   293.06   1465.287 |
+     |----------------------------------------------------------------|
+  6. |   6    1001   100/Mountain      0        4   293.06    1172.23 |
+  7. |   7    1001   100/Mountain      0        2   293.06   586.1149 |
+  8. |   8    1001   100/Mountain      0        3   293.06   879.1722 |
+  9. |   9    1001   100/Mountain      0       10   293.06   2930.574 |
+ 10. |  10    1001   100/Mountain      0        4   293.06    1172.23 |
+     +----------------------------------------------------------------+
+
+. 
+. * Note each line represents one household. Note relationship btwn weights
+. display  round(293.06*2,1) ", " round(293.06*3,1) ", " round(293.06*4,1) ", " round(293.06*5,1)
+586, 879, 1172, 1465
+
+. summ
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+         hid |      5,988      2994.5    1728.731          1       5988
+       xhpsu |      5,988      1468.8    225.9238       1001       1800
+       xhnum |      5,988    9.280895     5.29219          1         34
+       wt_hh |      5,988    964.6376    348.3145     280.35    1609.11
+      strata |      5,988    251.5571    62.34886        100        325
+-------------+---------------------------------------------------------
+ female_head |      5,988    .2670341    .4424472          0          1
+       hhage |      5,988    45.99516    14.13213         11         95
+      hh_edu |      5,988     3.97328    4.590746          0         16
+       hhlit |      5,988    .4392118    .4963325          0          1
+      hhsize |      5,988    4.755177     2.30739          1         20
+-------------+---------------------------------------------------------
+        belt |      5,988    2.328657    .5974729          1          3
+      region |      5,988    2.496994    1.206916          1          5
+      urbrur |      5,988    1.651303    .4765978          1          2
+          ad |      5,988    6.054108    3.392346          1         12
+      wt_ind |      5,988    4679.979     3076.81   280.3486   29247.31
+-------------+---------------------------------------------------------
+    fpline_7 |      5,988    11929.36           0   11929.36   11929.36
+     pline_7 |      5,988    19261.18           0   19261.18   19261.18
+      pindex |      5,988    1.115112    .4222195   .8306043    2.12514
+        poor |      5,988    .1852037    .3884952          0          1
+totcons_pc_7 |      5,988    45738.46    42471.25   4541.014   510733.1
+-------------+---------------------------------------------------------
+   food_pc_7 |      5,988    22297.09    14019.84          0     208728
+   quintle_7 |      5,988    3.440047    1.420781          1          5
+
+. 
+. * How many households in the sample? 5988?
+
+. codebook hid /*detail summary*/
+------------------------------------------------------------------------------------------------------------------------------------------------
+hid                                                                                                                           group(xhpsu xhnum)
+------------------------------------------------------------------------------------------------------------------------------------------------
+                  type:  numeric (float)
+                 range:  [1,5988]                     units:  1
+         unique values:  5,988                    missing .:  0/5,988
+                  mean:    2994.5
+              std. dev:   1728.73
+
+           percentiles:        10%       25%       50%       75%       90%
+                               599    1497.5    2994.5    4491.5      5390
+
+. *what do we learn from unique & missing?
+. * Poor=1 if total consumption < poverty line                  
+
+. summarize poor   
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+        poor |      5,988    .1852037    .3884952          0          1
+
+. ***;
+. ***    Interpret the mean                                          
+. ***    What is "Std. Dev."?                                        
+. ***    Read the online handouts for an applied discussion on the 
+. ***    difference between standard errors and standard deviations
+. ***    goto gpad_sdxse.pdf;
+. ***    goto streiner_sdxse.pdf (comment on abstract, show equations)
+. 
+. summ poor [w=wt_hh]                                        
+
+    Variable |     Obs      Weight        Mean   Std. Dev.       Min        Max
+-------------+-----------------------------------------------------------------
+        poor |   5,988  5776250.05    .2000372   .4000613          0          1
+
+.        * Interpret the mean
+.        * Do we know how precisely estimated the mean is?                                         
+.        * What is "Weight"?                                          
+. 
+. summ poor [w=wt_ind]                                        
+    Variable |     Obs      Weight        Mean   Std. Dev.       Min        Max
+-------------+-----------------------------------------------------------------
+        poor |   5,988    28023715    .2515503   .4339403          0          1
+
+. ***;
+. ***;
+.        * Interpret the mean                                         
+.        * What is "Weight"?                                          
+
+. summ hhsize [w=wt_hh]                                     
+
+    Variable |     Obs      Weight        Mean   Std. Dev.       Min        Max
+-------------+-----------------------------------------------------------------
+      hhsize |   5,988  5776250.05     4.85154   2.349521          1         20
+
+.        * Interpret the mean                                          
+.        * How would you interpret mean if wt_indiv?                   
+.        * If wt_indiv, will mean change, increase, decrease?         
+.                                                         
+. summ hhsize [w=wt_ind]                                      
+    Variable |     Obs      Weight        Mean   Std. Dev.       Min        Max
+-------------+-----------------------------------------------------------------
+      hhsize |   5,988    28023715    5.989185    2.78275          1         20
+
+.        * Which should you use?                                       
+. 
+. svyset [weight=wt_ind], psu(xhpsu) strata(strata) 
+
+      pweight: wt_ind
+          VCE: linearized
+  Single unit: missing
+     Strata 1: strata
+         SU 1: xhpsu
+        FPC 1: <zero>
+. svy: mean poor  
+Survey: Mean estimation
+Number of strata =      14       Number of obs   =       5,988
+Number of PSUs   =     499       Population size =  28,023,715
+                                 Design df       =         485
+--------------------------------------------------------------
+             |             Linearized
+             |       Mean   Std. Err.     [95% Conf. Interval]
+-------------+------------------------------------------------
+        poor |   .2515503   .0110533      .2298321    .2732685
+--------------------------------------------------------------
+
+. summ poor [w=wt_ind]
+    Variable |     Obs      Weight        Mean   Std. Dev.       Min        Max
+-------------+-----------------------------------------------------------------
+        poor |   5,988    28023715    .2515503   .4339403          0          1
+
+.        * Note Estimate and "Std. Error" (later for Deff)            
+.        * Note equivalence of "Weight" and "Pop size"  
+. 
+. tab strata
+
+Strata in the NLSS3' sample |      Freq.     Percent        Cum.
+----------------------------+-----------------------------------
+               100/Mountain |        408        6.81        6.81
+ 218/Urban-Kathmandu Valley |        864       14.43       21.24
+             219/Urban-Hill |        480        8.02       29.26
+     221/Rural-Hill-Eastern |        384        6.41       35.67
+     222/Rural-Hill-Central |        480        8.02       43.69
+     223/Rural-Hill-Western |        480        8.02       51.70
+ 224/Rural-Hill-Mid-Western |        336        5.61       57.31
+ 225/Rural-Hill-Far-Western |        180        3.01       60.32
+            310/Urban-Terai |        672       11.22       71.54
+    321/Rural-Terai-Eastern |        480        8.02       79.56
+    322/Rural-Terai-Central |        480        8.02       87.58
+    323/Rural-Terai-Western |        348        5.81       93.39
+324/Rural-Terai-Mid-Western |        240        4.01       97.39
+325/Rural-Terai-Far-Western |        156        2.61      100.00
+----------------------------+-----------------------------------
+                      Total |      5,988      100.00
+
+. * This tells us the distribution of households in the sample
+. tab strata [aw=wt_hh]
+
+Strata in the NLSS3' sample |      Freq.     Percent        Cum.
+----------------------------+-----------------------------------
+               100/Mountain | 416.197035        6.95        6.95
+ 218/Urban-Kathmandu Valley | 402.954392        6.73       13.68
+             219/Urban-Hill | 304.934652        5.09       18.77
+     221/Rural-Hill-Eastern | 385.736569        6.44       25.21
+     222/Rural-Hill-Central | 581.025896        9.70       34.92
+     223/Rural-Hill-Western |  646.96212       10.80       45.72
+ 224/Rural-Hill-Mid-Western | 341.425627        5.70       51.42
+ 225/Rural-Hill-Far-Western | 174.856546        2.92       54.34
+            310/Urban-Terai | 521.370597        8.71       63.05
+    321/Rural-Terai-Eastern | 688.468112       11.50       74.55
+    322/Rural-Terai-Central | 787.609542       13.15       87.70
+    323/Rural-Terai-Western | 337.298815        5.63       93.33
+324/Rural-Terai-Mid-Western | 236.103793        3.94       97.28
+325/Rural-Terai-Far-Western | 163.056303        2.72      100.00
+----------------------------+-----------------------------------
+                      Total |      5,988      100.00
+
+. * This tells us the distribution of households in the population
+.   *                                     n_h/sum(n_h)     N_h / sum(N_h)   Ratio
+.   *  -------------------------------------------------------------------------;
+.   *  Mountains                            0.07               0.07          1
+.   *  Urban-Kathmandu                      0.14               0.07          2
+.   *  Urban-Hill                           0.08               0.05          1.6
+.   *  Urban-Terai                          0.11               0.09          1.2
+.   *  Rural Hills -Eastern                 0.06               0.06          1
+.   *  Rural Hills -Central                 0.08               0.10          0.8
+.   *  Rural Hills - Western                0.08               0.11          0.73
+.   *  Rural Hills -Mid and far western     0.09               0.09          1
+.   *  Rural Terai - Eastern                0.08               0.12          0.67
+.   *  Rural Terai- Central                 0.08               0.13          0.62
+.   *  Rural Terai -Western                 0.06               0.06          1
+.   *  Rural Terai - Mid and Far west       0.07               0.07          1
+.   * -------------------------------------------------------------------------
+.   * Over or undersample households in each stratum?                        
+.   * eg. Urban-Kathmandu(oversampled):more obs in the sample relative 
+.         *     to population
+. svyset, clear
+. svyset, srs
+      pweight: <none>
+          VCE: linearized
+  Single unit: missing
+     Strata 1: <one>
+         SU 1: <observations>
+        FPC 1: <zero>
+
+. svy: mean poor
+Survey: Mean estimation
+Number of strata =       1        Number of obs   =      5,988
+Number of PSUs   =   5,988        Population size =      5,988
+                                  Design df       =      5,987
+--------------------------------------------------------------
+             |             Linearized
+             |       Mean   Std. Err.     [95% Conf. Interval]
+-------------+------------------------------------------------
+        poor |   .1852037   .0050205      .1753618    .1950457
+--------------------------------------------------------------
+
+. svyset, clear
+. gen one=1
+. summ one
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+         one |      5,988           1           0          1          1
+
+. svyset [w=one]
+      pweight: one
+          VCE: linearized
+  Single unit: missing
+     Strata 1: <one>
+         SU 1: <observations>
+        FPC 1: <zero>
+
+. svy: mean poor
+Survey: Mean estimation
+Number of strata =       1        Number of obs   =      5,988
+Number of PSUs   =   5,988        Population size =      5,988
+                                  Design df       =      5,987
+--------------------------------------------------------------
+             |             Linearized
+             |       Mean   Std. Err.     [95% Conf. Interval]
+-------------+------------------------------------------------
+        poor |   .1852037   .0050205      .1753618    .1950457
+--------------------------------------------------------------
+
+. help svy    
